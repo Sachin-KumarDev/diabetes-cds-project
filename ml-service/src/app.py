@@ -1,29 +1,29 @@
 """
-FastAPI Server
-- Serves predictions via REST API
-- Returns SHAP explanations
-- Health checks
+Diabetes ML Service — FastAPI Server with SHAP Explanations
 """
-from fastapi import FastAPI, HTTPException, status
-from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, Field
+import os
+import json
+import numpy as np
 from typing import List, Optional, Dict, Any
 import uvicorn
-import numpy as np
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+from dotenv import load_dotenv
 
-from predict import Predictor
+from predict import predictor
 from explain import ModelExplainer
+from chatbot.agent import ClinicalChatbot
 
-# Initialize FastAPI
+# ---------- Setup ----------
+load_dotenv()
+
 app = FastAPI(
-    title="Diabetes Prediction API",
-    description="Clinical Decision Support System for Diabetes",
-    version="1.0.0",
-    docs_url="/api/docs",
-    redoc_url="/api/redoc"
+    title="Diabetes ML Service",
+    description="ML Service for Diabetes Prediction with SHAP Explainability",
+    version="2.0.0",
 )
 
-# CORS Middleware
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -32,21 +32,21 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Initialize predictors
-predictor = Predictor()
+# ---------- Globals ----------
 explainer = ModelExplainer()
+chatbot = ClinicalChatbot()
 model_loaded = False
 
-# Request/Response Models
+# ---------- Schemas ----------
 class PatientData(BaseModel):
-    gender: str = Field(..., description="Gender: Female or Male")
-    age: float = Field(..., ge=0, le=120, description="Age in years")
-    hypertension: int = Field(..., ge=0, le=1, description="0=No, 1=Yes")
-    heart_disease: int = Field(..., ge=0, le=1, description="0=No, 1=Yes")
-    smoking_history: str = Field(..., description="Never, Former, Current, etc.")
-    bmi: float = Field(..., ge=10, le=70, description="Body Mass Index")
-    HbA1c_level: float = Field(..., ge=3.5, le=15, description="HbA1c Level (%)")
-    blood_glucose_level: int = Field(..., ge=50, le=500, description="Blood Glucose Level (mg/dL)")
+    gender: str
+    age: float
+    hypertension: int
+    heart_disease: int
+    smoking_history: str
+    bmi: float
+    HbA1c_level: float
+    blood_glucose_level: int
 
 class PredictionResponse(BaseModel):
     prediction: int
@@ -56,131 +56,106 @@ class PredictionResponse(BaseModel):
     confidence: str
     explanation: Optional[Dict[str, Any]] = None
 
-class BatchPredictionRequest(BaseModel):
-    patients: List[PatientData]
+class ChatRequest(BaseModel):
+    question: str
+    session_id: Optional[str] = None
+    patient_data: Optional[Dict] = None
 
-class BatchPredictionResponse(BaseModel):
-    predictions: List[PredictionResponse]
+class ChatStartRequest(BaseModel):
+    patient_data: Optional[Dict] = None
 
-# Load model on startup
+# ---------- Startup ----------
 @app.on_event("startup")
 async def startup_event():
-    global model_loaded, predictor, explainer
-    
+    global model_loaded
     try:
         print("📂 Loading model...")
-        predictor.load_model('models')
-        explainer.load_model('models')
+        predictor.load_model("models")
+        explainer.load_model("models")
+        predictor.set_explainer(explainer)
         model_loaded = True
-        print("✅ Model loaded successfully!")
+        print("✅ ML service ready!")
     except Exception as e:
-        print(f"❌ Error loading model: {e}")
+        print(f"❌ Startup error: {e}")
         model_loaded = False
 
-# Endpoints
-@app.get("/", tags=["Health"])
+# ---------- Health ----------
+@app.get("/")
 async def root():
     return {
-        "service": "Diabetes Prediction API",
+        "service": "Diabetes ML Service",
+        "version": "2.0.0",
         "status": "healthy" if model_loaded else "model_not_loaded",
-        "version": "1.0.0"
     }
 
-@app.get("/api/health", tags=["Health"])
-async def health_check():
+@app.get("/health")
+async def health():
     return {
         "status": "healthy" if model_loaded else "degraded",
         "model_loaded": model_loaded,
-        "model_path": "models/diabetes_model.pkl"
+        "service": "Diabetes ML Service",
     }
 
-@app.get("/api/features", tags=["Metadata"])
-async def get_features():
-    """Get list of features used by the model"""
+# ---------- Prediction ----------
+@app.post("/predict", response_model=PredictionResponse)
+async def predict(data: PatientData):
     if not model_loaded:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Model not loaded"
-        )
+        raise HTTPException(status_code=503, detail="Model not loaded")
+    try:
+        return predictor.predict(data.dict(), include_explanation=False)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/predict/explain")
+async def predict_with_explanation(data: PatientData):
+    """Return prediction + SHAP explanation"""
+    if not model_loaded:
+        raise HTTPException(status_code=503, detail="Model not loaded")
+    try:
+        return predictor.predict(data.dict(), include_explanation=True)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# ---------- Features / Metadata ----------
+@app.get("/features")
+async def get_features():
+    if not model_loaded:
+        raise HTTPException(status_code=503, detail="Model not loaded")
     return {
         "features": predictor.preprocessor.feature_columns,
-        "count": len(predictor.preprocessor.feature_columns)
+        "count": len(predictor.preprocessor.feature_columns),
     }
 
-@app.post("/api/predict", response_model=PredictionResponse, tags=["Prediction"])
-async def predict(data: PatientData):
-    """Make prediction for a single patient"""
-    if not model_loaded:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Model not loaded. Please try again later."
-        )
-    
-    try:
-        # Convert to dict
-        patient_dict = data.model_dump()
-        
-        # Get prediction
-        result = predictor.predict(patient_dict)
-        
-        # Get SHAP explanation
-        # (In production, you'd compute SHAP here)
-        result['explanation'] = None  # Placeholder
-        
-        return result
-        
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Prediction failed: {str(e)}"
-        )
-
-@app.post("/api/predict/batch", response_model=BatchPredictionResponse, tags=["Prediction"])
-async def predict_batch(request: BatchPredictionRequest):
-    """Make predictions for multiple patients"""
-    if not model_loaded:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Model not loaded. Please try again later."
-        )
-    
-    try:
-        results = []
-        for patient in request.patients:
-            patient_dict = patient.model_dump()
-            result = predictor.predict(patient_dict)
-            result['explanation'] = None
-            results.append(result)
-        
-        return BatchPredictionResponse(predictions=results)
-        
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Batch prediction failed: {str(e)}"
-        )
-
-@app.get("/api/metadata", tags=["Metadata"])
+@app.get("/metadata")
 async def get_metadata():
-    """Get model metadata"""
-    if not model_loaded:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Model not loaded"
-        )
-    
     try:
-        import json
-        with open('models/model_metadata.json', 'r') as f:
-            metadata = json.load(f)
-        return metadata
-    except:
+        with open("models/model_metadata.json", "r") as f:
+            return json.load(f)
+    except Exception:
         return {"message": "Metadata not available"}
 
+# ---------- Chatbot ----------
+@app.post("/chat/start")
+async def chat_start(request: ChatStartRequest):
+    try:
+        return {"success": True, "data": chatbot.start_conversation(request.patient_data)}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/chat")
+async def chat_message(request: ChatRequest):
+    try:
+        if request.patient_data:
+            chatbot.context_manager.update_patient_context(request.patient_data)
+        return {"success": True, "data": chatbot.chat(request.question)}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/chat/suggested")
+async def get_suggested():
+    from chatbot.prompts import SUGGESTED_QUESTIONS
+    return {"success": True, "data": {"suggested_questions": SUGGESTED_QUESTIONS}}
+
+# ---------- Run ----------
 if __name__ == "__main__":
-    uvicorn.run(
-        "app:app",
-        host="0.0.0.0",
-        port=8000,
-        reload=True
-    )
+    uvicorn.run("app:app", host="0.0.0.0", port=8000, reload=True)
