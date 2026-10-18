@@ -1,0 +1,61 @@
+.header {
+  background: white;
+  padding: 16px 32px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.header-left h1 {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1a202c;
+}
+
+.header-left .subtitle {
+  font-size: 13px;
+  color: #718096;
+  margin-left: 12px;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.doctor-profile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 16px 6px 12px;
+  background: #f7fafc;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+}
+
+.avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #48bb78, #38a169);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.info .name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1a202c;
+}
+
+.info .role {
+  font-size: 11px;
+  color: #718096;
+  text-transform: capitalize;
+}

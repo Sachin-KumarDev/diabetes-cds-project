@@ -1,0 +1,500 @@
+/* ============================================================
+   PredictionResult — Full Clinical Dashboard
+   ============================================================ */
+
+.prediction-result {
+  background: white;
+  padding: 28px;
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
+  width: 100%;
+  max-width: 100%;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+}
+
+/* ---------- RISK BANNER ---------- */
+.risk-banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-radius: 14px;
+  border: 2px solid;
+  margin-bottom: 16px;
+}
+
+.risk-banner-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.risk-banner-emoji {
+  font-size: 42px;
+  line-height: 1;
+}
+
+.risk-banner-title {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+}
+
+.risk-banner-subtitle {
+  font-size: 13px;
+  color: #4a5568;
+  margin-top: 2px;
+}
+
+.risk-banner-right {
+  text-align: right;
+}
+
+.risk-banner-confidence {
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.risk-banner-confidence-label {
+  font-size: 11px;
+  color: #718096;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: 2px;
+}
+
+/* ---------- CONFIDENCE BAR ---------- */
+.result-confidence {
+  margin-bottom: 20px;
+}
+
+.confidence-bar-bg {
+  width: 100%;
+  height: 8px;
+  background: #edf2f7;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.confidence-bar {
+  height: 100%;
+  border-radius: 8px;
+  transition: width 0.6s ease;
+}
+
+/* ---------- TABS ---------- */
+.result-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 24px;
+  border-bottom: 2px solid #edf2f7;
+}
+
+.tab-btn {
+  padding: 12px 20px;
+  border: none;
+  background: none;
+  font-size: 14px;
+  font-weight: 600;
+  color: #718096;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.tab-btn:hover:not(:disabled) {
+  color: #48bb78;
+  background: #f0fff4;
+  border-radius: 8px 8px 0 0;
+}
+
+.tab-btn.active {
+  color: #48bb78;
+  border-bottom-color: #48bb78;
+}
+
+.tab-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ---------- SECTION TITLES ---------- */
+.section-title-bar {
+  margin-bottom: 16px;
+}
+
+.section-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #1a202c;
+  margin-bottom: 2px;
+}
+
+.section-subtitle {
+  font-size: 12px;
+  color: #718096;
+}
+
+/* ---------- VITALS GRID ---------- */
+.overview-container {
+  animation: fadeIn 0.3s ease;
+}
+
+.vitals-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+}
+
+.vital-card {
+  background: #f7fafc;
+  border: 1px solid #edf2f7;
+  border-radius: 12px;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  transition: all 0.2s;
+}
+
+.vital-card:hover {
+  border-color: #cbd5e0;
+  background: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+}
+
+.vital-label {
+  font-size: 11px;
+  color: #718096;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  font-weight: 600;
+}
+
+.vital-value {
+  font-size: 24px;
+  font-weight: 800;
+  color: #1a202c;
+  line-height: 1.1;
+}
+
+.vital-unit {
+  font-size: 12px;
+  font-weight: 500;
+  color: #a0aec0;
+  margin-left: 6px;
+}
+
+.vital-chip {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  align-self: flex-start;
+  margin-top: 2px;
+}
+
+/* ---------- META GRID ---------- */
+.meta-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.meta-card {
+  background: #f7fafc;
+  border: 1px solid #edf2f7;
+  border-radius: 12px;
+  padding: 14px 18px;
+}
+
+.meta-label {
+  font-size: 11px;
+  color: #718096;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.meta-value {
+  font-size: 15px;
+  font-weight: 600;
+  color: #2d3748;
+  word-break: break-word;
+}
+
+/* ---------- CLINICAL NOTE ---------- */
+.clinical-note {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  padding: 16px 20px;
+  background: #f7fafc;
+  border-left: 4px solid;
+  border-radius: 10px;
+  margin-top: 20px;
+}
+
+.clinical-note-icon {
+  font-size: 22px;
+  line-height: 1;
+}
+
+.clinical-note-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #1a202c;
+  margin-bottom: 4px;
+}
+
+.clinical-note-text {
+  font-size: 13px;
+  color: #4a5568;
+  line-height: 1.5;
+}
+
+/* ---------- EXPLANATION ---------- */
+.explanation-container {
+  animation: fadeIn 0.3s ease;
+  width: 100%;
+  max-width: 100%;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ---------- SHAP CHART (Vertical, Full Width, Chunky Bars) ---------- */
+.shap-chart-large {
+  background: #f7fafc;
+  border: 1px solid #edf2f7;
+  border-radius: 14px;
+  padding: 20px 16px 12px 16px;
+  margin: 0 0 16px 0;
+  width: 100%;
+  max-width: 100%;
+  min-height: 520px;
+  display: block;
+}
+
+.shap-chart-large .recharts-wrapper {
+  margin: 0 !important;
+}
+
+.shap-chart-large .recharts-bar-rectangle {
+  min-width: 60px;
+}
+
+.chart-hint {
+  font-size: 12px;
+  color: #718096;
+  text-align: center;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed #e2e8f0;
+  width: 100%;
+}
+
+.chart-hint strong {
+  color: #2d3748;
+}
+
+/* ---------- AI CONCLUSION ---------- */
+.shap-conclusion {
+  background: #ffffff;
+  border-left: 4px solid;
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin-top: 16px;
+  margin-bottom: 8px;
+}
+
+.shap-conclusion-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.shap-conclusion-icon {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.shap-conclusion-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: #1a202c;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+.shap-conclusion-text {
+  font-size: 13px;
+  color: #2d3748;
+  line-height: 1.6;
+}
+
+/* ---------- LEGEND ---------- */
+.shap-legend {
+  display: flex;
+  gap: 24px;
+  justify-content: center;
+  margin-bottom: 20px;
+  font-size: 12px;
+  color: #4a5568;
+  font-weight: 500;
+  width: 100%;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+/* ---------- TOP FACTORS ---------- */
+.top-factors {
+  margin-bottom: 16px;
+  width: 100%;
+  max-width: 100%;
+}
+
+.factor-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: #f7fafc;
+  border: 1px solid #edf2f7;
+  border-radius: 10px;
+  margin-bottom: 8px;
+  font-size: 13px;
+  transition: all 0.2s;
+}
+
+.factor-row:hover {
+  background: white;
+  border-color: #cbd5e0;
+}
+
+.factor-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.factor-rank {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #edf2f7;
+  color: #4a5568;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.factor-name {
+  font-weight: 600;
+  color: #2d3748;
+}
+
+.factor-impact {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.factor-chip {
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.factor-direction {
+  color: #a0aec0;
+  font-size: 11px;
+  font-weight: 400;
+}
+
+/* ---------- BASE VALUE ---------- */
+.shap-base-value {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 18px;
+  background: #ebf8ff;
+  border-radius: 10px;
+  font-size: 13px;
+  margin-bottom: 16px;
+  width: 100%;
+  max-width: 100%;
+}
+
+.base-label {
+  color: #2c5282;
+  font-weight: 600;
+}
+
+.base-number {
+  font-weight: 800;
+  color: #2b6cb0;
+  font-size: 16px;
+}
+
+.base-note {
+  color: #718096;
+  font-size: 11px;
+  margin-left: auto;
+}
+
+/* ---------- ACTIONS ---------- */
+.result-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #edf2f7;
+}
+
+.btn-chat {
+  flex: 1;
+  padding: 12px;
+  background: #edf2f7;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  font-weight: 600;
+  color: #2d3748;
+  font-family: inherit;
+  font-size: 14px;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+.btn-chat:hover {
+  background: #48bb78;
+  color: white;
+  border-color: #48bb78;
+}

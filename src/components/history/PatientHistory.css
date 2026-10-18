@@ -1,0 +1,77 @@
+.history-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.history-container h2 {
+  font-size: 24px;
+  color: #1a202c;
+  margin-bottom: 24px;
+}
+
+.patient-info {
+  margin-bottom: 24px;
+}
+
+.patient-info-card {
+  background: white;
+  padding: 20px 24px;
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.patient-info-card p {
+  font-size: 14px;
+  color: #4a5568;
+}
+
+.patient-info-card strong {
+  color: #1a202c;
+}
+
+.history-table-container {
+  background: white;
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
+}
+
+.history-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.history-table th {
+  text-align: left;
+  padding: 14px 20px;
+  background: #f7fafc;
+  font-weight: 600;
+  font-size: 13px;
+  color: #4a5568;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.history-table td {
+  padding: 14px 20px;
+  border-bottom: 1px solid #edf2f7;
+  font-size: 14px;
+}
+
+.history-empty {
+  text-align: center;
+  padding: 60px;
+}
+
+.history-empty p {
+  color: #718096;
+  margin-bottom: 20px;
+}
+
+.history-loading {
+  text-align: center;
+  padding: 60px;
+  color: #718096;
+}
