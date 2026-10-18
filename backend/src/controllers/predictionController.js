@@ -2,42 +2,50 @@ const Patient = require('../models/Patient');
 const Prediction = require('../models/Prediction');
 const mlClient = require('../services/mlClient');
 
-// Create prediction
+/* ---------------- CREATE PREDICTION ---------------- */
 const createPrediction = async (req, res) => {
   try {
     const patientData = req.body;
-    
-    // Check if patient exists
+    console.log('📤 Prediction request:', patientData.patientId);
+
+    // 1) Ensure patient exists
     let patient = await Patient.findOne({
-      where: { patientId: patientData.patientId }
+      where: { patientId: patientData.patientId },
     });
 
     if (!patient) {
-      // Create new patient
       patient = await Patient.create({
         patientId: patientData.patientId,
         name: patientData.name,
         age: patientData.age,
         gender: patientData.gender,
-        contactNumber: patientData.contactNumber,
-        email: patientData.email,
-        address: patientData.address,
-        medicalHistory: patientData.medicalHistory,
-        createdBy: req.userId
+        contactNumber: patientData.contactNumber || null,
+        email: patientData.email || null,
+        address: patientData.address || null,
+        medicalHistory: patientData.medicalHistory || null,
+        createdBy: req.userId,
       });
+      console.log('✅ New patient created:', patient.patientId);
     }
 
-    // Call ML service
+    // 2) Call ML service (with SHAP)
     const mlResult = await mlClient.predict(patientData);
 
     if (!mlResult.success) {
       return res.status(500).json({
         success: false,
-        message: mlResult.error || 'Prediction failed'
+        message: mlResult.error || 'Prediction failed',
       });
     }
 
-    // Save prediction
+    // 3) Clean risk level (strip emojis / extra chars)
+    let riskLevel = mlResult.riskLevel || 'LOW';
+    riskLevel = riskLevel.replace(/[^\w\s]/gi, '').trim().toUpperCase();
+    if (riskLevel.includes('HIGH')) riskLevel = 'HIGH';
+    else if (riskLevel.includes('MODERATE')) riskLevel = 'MODERATE';
+    else riskLevel = 'LOW';
+
+    // 4) Save prediction (including SHAP explanation JSON)
     const prediction = await Prediction.create({
       patientId: patient.id,
       gender: patientData.gender,
@@ -50,12 +58,16 @@ const createPrediction = async (req, res) => {
       bloodGlucose: patientData.bloodGlucose,
       prediction: mlResult.prediction,
       probability: mlResult.probability,
-      riskLevel: mlResult.riskLevel,
+      riskLevel: riskLevel,
       confidence: mlResult.confidence,
+      explanation: mlResult.explanation,       // ← SHAP saved here
       doctorNotes: patientData.doctorNotes || null,
-      createdBy: req.userId
+      createdBy: req.userId,
     });
 
+    console.log('✅ Prediction saved (id:', prediction.id, ')');
+
+    // 5) Respond with everything (including explanation)
     res.json({
       success: true,
       data: {
@@ -64,73 +76,51 @@ const createPrediction = async (req, res) => {
         patientName: patient.name,
         prediction: mlResult.prediction,
         probability: mlResult.probability,
-        riskLevel: mlResult.riskLevel,
+        riskLevel: riskLevel,
         confidence: mlResult.confidence,
-        createdAt: prediction.createdAt
-      }
+        explanation: mlResult.explanation,     // ← sent to frontend
+        createdAt: prediction.createdAt,
+        age: patientData.age,
+        bmi: patientData.bmi,
+        hba1c: patientData.hba1c,
+        bloodGlucose: patientData.bloodGlucose,
+        gender: patientData.gender,
+      },
     });
-
   } catch (error) {
-    console.error('Prediction error:', error);
-    res.status(500).json({
-      success: false,
-      message: error.message
-    });
+    console.error('❌ Prediction error:', error.message);
+    console.error(error.stack);
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
-// Get prediction by ID
+/* ---------------- GET BY ID ---------------- */
 const getPredictionById = async (req, res) => {
   try {
-    const { id } = req.params;
-    
-    const prediction = await Prediction.findByPk(id, {
-      include: [
-        { model: Patient, attributes: ['patientId', 'name', 'age', 'gender'] }
-      ]
+    const prediction = await Prediction.findByPk(req.params.id, {
+      include: [{ model: Patient, attributes: ['patientId', 'name', 'age', 'gender'] }],
     });
-
     if (!prediction) {
-      return res.status(404).json({
-        success: false,
-        message: 'Prediction not found'
-      });
+      return res.status(404).json({ success: false, message: 'Prediction not found' });
     }
-
-    res.json({
-      success: true,
-      data: prediction
-    });
-
+    res.json({ success: true, data: prediction });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message
-    });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
-// Get patient predictions
+/* ---------------- PATIENT PREDICTIONS ---------------- */
 const getPatientPredictions = async (req, res) => {
   try {
     const { patientId } = req.params;
-    
-    const patient = await Patient.findOne({
-      where: { patientId }
-    });
-
+    const patient = await Patient.findOne({ where: { patientId } });
     if (!patient) {
-      return res.status(404).json({
-        success: false,
-        message: 'Patient not found'
-      });
+      return res.status(404).json({ success: false, message: 'Patient not found' });
     }
-
     const predictions = await Prediction.findAll({
       where: { patientId: patient.id },
-      order: [['createdAt', 'DESC']]
+      order: [['createdAt', 'DESC']],
     });
-
     res.json({
       success: true,
       data: {
@@ -138,21 +128,17 @@ const getPatientPredictions = async (req, res) => {
           patientId: patient.patientId,
           name: patient.name,
           age: patient.age,
-          gender: patient.gender
+          gender: patient.gender,
         },
-        predictions
-      }
+        predictions,
+      },
     });
-
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message
-    });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
-// Get all predictions (with pagination)
+/* ---------------- ALL PREDICTIONS ---------------- */
 const getAllPredictions = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
@@ -160,63 +146,36 @@ const getAllPredictions = async (req, res) => {
     const offset = (page - 1) * limit;
 
     const { count, rows } = await Prediction.findAndCountAll({
-      include: [
-        { model: Patient, attributes: ['patientId', 'name', 'age', 'gender'] }
-      ],
+      include: [{ model: Patient, attributes: ['patientId', 'name', 'age', 'gender'] }],
       order: [['createdAt', 'DESC']],
       limit,
-      offset
+      offset,
     });
 
     res.json({
       success: true,
       data: {
         predictions: rows,
-        pagination: {
-          page,
-          limit,
-          total: count,
-          pages: Math.ceil(count / limit)
-        }
-      }
+        pagination: { page, limit, total: count, pages: Math.ceil(count / limit) },
+      },
     });
-
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message
-    });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
-// Update prediction notes
+/* ---------------- UPDATE NOTES ---------------- */
 const updatePrediction = async (req, res) => {
   try {
-    const { id } = req.params;
-    const { doctorNotes } = req.body;
-
-    const prediction = await Prediction.findByPk(id);
+    const prediction = await Prediction.findByPk(req.params.id);
     if (!prediction) {
-      return res.status(404).json({
-        success: false,
-        message: 'Prediction not found'
-      });
+      return res.status(404).json({ success: false, message: 'Prediction not found' });
     }
-
-    prediction.doctorNotes = doctorNotes;
+    prediction.doctorNotes = req.body.doctorNotes;
     await prediction.save();
-
-    res.json({
-      success: true,
-      message: 'Prediction updated successfully',
-      data: prediction
-    });
-
+    res.json({ success: true, message: 'Updated', data: prediction });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message
-    });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
@@ -225,5 +184,5 @@ module.exports = {
   getPredictionById,
   getPatientPredictions,
   getAllPredictions,
-  updatePrediction
+  updatePrediction,
 };

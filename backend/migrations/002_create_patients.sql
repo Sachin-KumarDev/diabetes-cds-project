@@ -21,6 +21,6 @@ CREATE TABLE IF NOT EXISTS Patients (
 -- Insert sample patients
 INSERT INTO Patients (patientId, name, age, gender, contactNumber, email, address, medicalHistory, createdBy) 
 VALUES 
-('PAT-2024-0001', 'John Doe', 45, 'Male', '+1-555-0101', 'john.doe@email.com', '123 Main St, City, State 12345', 'Hypertension, Family history of diabetes', 1),
+('PAT-2024-0001', 'Sachin Kumar', 21, 'Male', '+1-555-0101', 'sachin@gmail.com', '123 Main St, City, State 12345', 'Hypertension, Family history of diabetes', 1),
 ('PAT-2024-0002', 'Jane Smith', 38, 'Female', '+1-555-0102', 'jane.smith@email.com', '456 Oak Ave, City, State 12345', 'Gestational diabetes history', 1),
 ('PAT-2024-0003', 'Robert Johnson', 52, 'Male', '+1-555-0103', 'robert.j@email.com', '789 Pine Rd, City, State 12345', 'Obesity, High cholesterol', 2);

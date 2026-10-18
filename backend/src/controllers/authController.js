@@ -13,7 +13,7 @@ const generateToken = (user) => {
 // Register
 const register = async (req, res) => {
   try {
-    const { name, email, password, role, specialization, hospital } = req.body;
+    const { name, email, password, specialization, hospital } = req.body;
 
     // Check if user exists
     const existingUser = await User.findByEmail(email);
@@ -29,7 +29,7 @@ const register = async (req, res) => {
       name,
       email,
       password,
-      role: role || 'doctor',
+      role: 'doctor',
       specialization,
       hospital
     });

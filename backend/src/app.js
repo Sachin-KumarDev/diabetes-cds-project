@@ -1,11 +1,16 @@
+
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 const dotenv = require('dotenv');
 
+// Load environment variables
+dotenv.config();
+
 // Import routes
 const authRoutes = require('./routes/auth');
+const userRoutes = require('./routes/users');
 const patientRoutes = require('./routes/patients');
 const predictionRoutes = require('./routes/predictions');
 const chatRoutes = require('./routes/chat');
@@ -14,8 +19,7 @@ const historyRoutes = require('./routes/history');
 // Import middleware
 const errorHandler = require('./middleware/errorHandler');
 
-dotenv.config();
-
+// Create Express application
 const app = express();
 
 // ============ Middleware ============
@@ -24,10 +28,12 @@ const app = express();
 app.use(helmet());
 
 // CORS
-app.use(cors({
-  origin: process.env.CORS_ORIGIN || '*',
-  credentials: true
-}));
+app.use(
+  cors({
+    origin: process.env.CORS_ORIGIN || '*',
+    credentials: true
+  })
+);
 
 // Logging
 app.use(morgan('dev'));
@@ -36,7 +42,7 @@ app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// ============ Routes ============
+// ============ Health Check ============
 
 app.get('/health', (req, res) => {
   res.json({
@@ -47,7 +53,10 @@ app.get('/health', (req, res) => {
   });
 });
 
+// ============ Routes ============
+
 app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes);
 app.use('/api/patients', patientRoutes);
 app.use('/api/predictions', predictionRoutes);
 app.use('/api/chat', chatRoutes);

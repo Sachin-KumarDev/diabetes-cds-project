@@ -97,4 +97,4 @@ const authorize = (...roles) => {
   };
 };
 
-module.exports = { auth, optionalAuth, authorize };
+module.exports = { auth, optionalAuth, authorize }; 
